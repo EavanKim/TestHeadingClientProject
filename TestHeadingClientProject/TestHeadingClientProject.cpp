@@ -10,13 +10,27 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <Windows.h>
 
-template<uint64_t buffersize>
-struct SendStruct
+#pragma pack(push, 1)
+struct Header
 {
 	unsigned long long type = 0;
-	unsigned long long length = buffersize;
-	char buffer[ buffersize ];
+	unsigned long long length = 0;
 };
+
+template<uint64_t _type, uint64_t _buffersize>
+struct SendStruct : public Header
+{
+	char buffer[ _buffersize ];
+
+	SendStruct()
+	{
+		type = _type;
+		length = _buffersize;
+	}
+};
+
+typedef SendStruct<1, 43> TestBuffer;
+#pragma pack(pop)
 
 uint64_t m_resultsize = 0;
 char Buffer[ 1 << 13 ];
@@ -41,7 +55,7 @@ int main()
 	WSADATA m_data = {};
 	addrinfo* m_info = nullptr;
 	SOCKET m_socket = INVALID_SOCKET;
-	SendStruct<43> testbuffer;
+	TestBuffer testbuffer;
 
 	unsigned long long testdata = 0;
 	unsigned long long testdata1 = 43;
@@ -52,6 +66,12 @@ int main()
 
 
 	memcpy( sendBuffer, &testbuffer, sizeof( testbuffer ) );
+
+	printf("Created Packet Info \n");
+	printf("TestBuffer \n");
+	printf("type : %lld \n", testbuffer.type);
+	printf("length : %lld \n", testbuffer.length);
+	printf("Buffer : %s \n", testbuffer.buffer);
 
 	int result = WSAStartup( MAKEWORD( 2, 2 ), &m_data );
 	if( S_OK != result )
@@ -156,7 +176,7 @@ int main()
 			continue;
 		}
 
-		//Sleep(1);
+		//Sleep(10);
 	}
 	//================================================================================================================================================================
 }
