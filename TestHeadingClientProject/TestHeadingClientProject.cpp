@@ -29,25 +29,58 @@ struct SendStruct : public Header
 	}
 };
 
-typedef SendStruct<1, 43> TestBuffer;
+typedef SendStruct<1, 0> SessionKey;
+typedef SendStruct<2, 0> Shutdown;
+typedef SendStruct<100, 43> TestBuffer;
 #pragma pack(pop)
 
 uint64_t m_resultsize = 0;
-char Buffer[ 1 << 13 ];
-char RecvBuffer[ 1 << 13 ];
 
-void WriteResultBuffer( char* _buffer, uint64_t _length )
+int TryConnect(SOCKET& _sock, addrinfo* _info)
 {
-	char* destPtr = ( char* )( Buffer + m_resultsize );
-	uint64_t length = ( uint64_t )( 1 << 13 ) - m_resultsize;
-	memcpy_s( destPtr, length, _buffer, _length );
+	int result = 0;
+	int loopCounter = 0;
+	do
+	{
+		if( 5 < loopCounter )
+		{
+			int winerror = GetLastError();
 
-	m_resultsize += _length;
+			if( INVALID_SOCKET != _sock )
+			{
+				closesocket( _sock );
+				_sock = INVALID_SOCKET;
+			}
+			// exception 객체 생성되면 throw하면서 에러 정보 송신
+			return 1;
+		}
+
+		_sock = socket( _info->ai_family, _info->ai_socktype, _info->ai_protocol );
+		if( INVALID_SOCKET == _sock )
+		{
+			continue;
+		}
+
+		result = connect( _sock, _info->ai_addr, ( int )_info->ai_addrlen );
+		if( result == SOCKET_ERROR )
+		{
+			int err = 0;
+			if( WSAECONNREFUSED == ( err = WSAGetLastError() ) )
+			{
+				closesocket( _sock );
+				_sock = INVALID_SOCKET;
+			}
+			wprintf( L"connect failed with error: %d\n", err );
+			freeaddrinfo( _info );
+			continue;
+		}
+	}
+	while( S_OK != result );
 }
 
 int main()
 {
-	uint64_t m_packetMulti = 10;
+	uint64_t m_packetMulti = 1;
 	uint64_t m_bufferSize = 0;
 
 	uint64_t m_currentpacketSize = 0;
@@ -102,80 +135,37 @@ int main()
 		return 1;
 	}
 
+	if( 0 != TryConnect( m_socket, m_info ) )
+		return 1;
 
-	int loopCounter = 0;
-	do
-	{
-		if( 5 < loopCounter )
-		{
-			int winerror = GetLastError();
-
-			if( INVALID_SOCKET != m_socket )
-			{
-				closesocket( m_socket );
-				m_socket = INVALID_SOCKET;
-			}
-			// exception 객체 생성되면 throw하면서 에러 정보 송신
-			return 1;
-		}
-
-		m_socket = socket( m_info->ai_family, m_info->ai_socktype, m_info->ai_protocol );
-		if( INVALID_SOCKET == m_socket )
-		{
-			continue;
-		}
-
-		result = connect( m_socket, m_info->ai_addr, ( int )m_info->ai_addrlen );
-		if( result == SOCKET_ERROR )
-		{
-			int err = 0;
-			if( WSAECONNREFUSED == ( err = WSAGetLastError() ) )
-			{
-				closesocket( m_socket );
-				m_socket = INVALID_SOCKET;
-			}
-			wprintf( L"connect failed with error: %d\n", err );
-			freeaddrinfo( m_info );
-			continue;
-		}
-	}
-	while( S_OK != result );
-
+	unsigned long long Count = 0;
 	DWORD receiveSize = 0;
-	while( 1 )
+	while( 100 > Count )
 	{
-		//receiveSize = send(m_socket, ( char* )&testdata, 8, 0);
-		//if( -1 == receiveSize )
-		//{
-		//	int sockerror = WSAGetLastError();
-		//	int winerror = GetLastError();
-		//	// 창이 안보일때가 있으니 Yield 시킵니다.
-		//	Sleep( 1 );
-		//	// 에러복구
-		//	continue;
-		//}
-		//Sleep( 10 );
-		//receiveSize = send(m_socket, ( char* )&testdata1, 8, 0);
-		//if( -1 == receiveSize )
-		//{
-		//	int sockerror = WSAGetLastError();
-		//	int winerror = GetLastError();
-		//	// 창이 안보일때가 있으니 Yield 시킵니다.
-		//	Sleep( 1 );
-		//	// 에러복구
-		//	continue;
-		//}
-		//Sleep( 10 );
-		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ) * m_packetMulti, 0);
-		if( -1 == receiveSize )
+		for( uint64_t count = 0; 100 > count; ++count )
 		{
-			int sockerror = WSAGetLastError();
-			int winerror = GetLastError();
-			// 그냥 끝냅니다.
-			return 1;
+			receiveSize = send( m_socket, sendBuffer, sizeof( testbuffer ) * m_packetMulti, 0 );
+			if( -1 == receiveSize )
+			{
+				int sockerror = WSAGetLastError();
+				int winerror = GetLastError();
+				// 그냥 끝냅니다.
+
+				closesocket( m_socket );
+				m_socket = INVALID_SOCKET;
+
+				if( 0 != TryConnect( m_socket, m_info ) )
+					return 1;
+			}
 		}
 
-		Sleep(10);
+		Sleep(100);
+		++Count;
 	}
 	//================================================================================================================================================================
+
+	Shutdown endpacket;
+	receiveSize = send( m_socket, (char*)&endpacket, sizeof(Shutdown), 0);
+	closesocket(m_socket);
+	WSACleanup();
 }
