@@ -13,8 +13,8 @@
 #pragma pack(push, 1)
 struct Header
 {
-	unsigned long long type = 0;
-	unsigned long long length = 0;
+	uint64_t type = 0;
+	uint64_t length = 0;
 };
 
 template<uint64_t _type, uint64_t _buffersize>
@@ -36,10 +36,10 @@ uint64_t m_resultsize = 0;
 char Buffer[ 1 << 13 ];
 char RecvBuffer[ 1 << 13 ];
 
-void WriteResultBuffer( char* _buffer, unsigned long long _length )
+void WriteResultBuffer( char* _buffer, uint64_t _length )
 {
 	char* destPtr = ( char* )( Buffer + m_resultsize );
-	unsigned long long length = ( unsigned long long )( 1 << 13 ) - m_resultsize;
+	uint64_t length = ( uint64_t )( 1 << 13 ) - m_resultsize;
 	memcpy_s( destPtr, length, _buffer, _length );
 
 	m_resultsize += _length;
@@ -47,6 +47,7 @@ void WriteResultBuffer( char* _buffer, unsigned long long _length )
 
 int main()
 {
+	uint64_t m_packetMulti = 5;
 	uint64_t m_bufferSize = 0;
 
 	uint64_t m_currentpacketSize = 0;
@@ -57,14 +58,14 @@ int main()
 	SOCKET m_socket = INVALID_SOCKET;
 	TestBuffer testbuffer;
 
-	unsigned long long testdata = 0;
-	unsigned long long testdata1 = 43;
+	uint64_t testdata = 0;
+	uint64_t testdata1 = 43;
 
 	memcpy( &testbuffer.buffer, "!!! this is test Text this is test Text !!", 43 );
 
-	char* sendBuffer = ( char* )malloc( sizeof( testbuffer ) * 10 );
+	char* sendBuffer = ( char* )malloc( sizeof( testbuffer ) * m_packetMulti );
 
-	for( unsigned long count = 0; 10 > count; ++count )
+	for( unsigned long count = 0; m_packetMulti > count; ++count )
 		memcpy( sendBuffer + ( count * sizeof( testbuffer ) ), &testbuffer, sizeof( testbuffer ) );
 
 	printf("Created Packet Info \n");
@@ -165,7 +166,8 @@ int main()
 		//	continue;
 		//}
 		//Sleep( 10 );
-		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ) * 10, 0);
+		printf("!!! TRY Send !!! \n");
+		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ) * m_packetMulti, 0);
 		if( -1 == receiveSize )
 		{
 			int sockerror = WSAGetLastError();
@@ -175,8 +177,9 @@ int main()
 			// 에러복구
 			continue;
 		}
+		printf( "!!! End Send !!! \n" );
 
-		Sleep(1);
+		Sleep(1000);
 	}
 	//================================================================================================================================================================
 }
