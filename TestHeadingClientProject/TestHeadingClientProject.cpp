@@ -25,7 +25,7 @@ struct SendStruct : public Header
 	SendStruct()
 	{
 		type = _type;
-		length = _buffersize;
+		length = sizeof( Header ) + _buffersize;
 	}
 };
 
@@ -47,7 +47,7 @@ void WriteResultBuffer( char* _buffer, uint64_t _length )
 
 int main()
 {
-	uint64_t m_packetMulti = 5;
+	uint64_t m_packetMulti = 10;
 	uint64_t m_bufferSize = 0;
 
 	uint64_t m_currentpacketSize = 0;
@@ -166,20 +166,16 @@ int main()
 		//	continue;
 		//}
 		//Sleep( 10 );
-		printf("!!! TRY Send !!! \n");
 		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ) * m_packetMulti, 0);
 		if( -1 == receiveSize )
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
-			// 창이 안보일때가 있으니 Yield 시킵니다.
-			Sleep( 1 );
-			// 에러복구
-			continue;
+			// 그냥 끝냅니다.
+			return 1;
 		}
-		printf( "!!! End Send !!! \n" );
 
-		Sleep(1000);
+		Sleep(10);
 	}
 	//================================================================================================================================================================
 }
