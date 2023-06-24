@@ -62,10 +62,10 @@ int main()
 
 	memcpy( &testbuffer.buffer, "!!! this is test Text this is test Text !!", 43 );
 
-	char* sendBuffer = ( char* )malloc( sizeof( testbuffer ) );
+	char* sendBuffer = ( char* )malloc( sizeof( testbuffer ) * 10 );
 
-
-	memcpy( sendBuffer, &testbuffer, sizeof( testbuffer ) );
+	for( unsigned long count = 0; 10 > count; ++count )
+		memcpy( sendBuffer + ( count * sizeof( testbuffer ) ), &testbuffer, sizeof( testbuffer ) );
 
 	printf("Created Packet Info \n");
 	printf("TestBuffer \n");
@@ -165,7 +165,7 @@ int main()
 		//	continue;
 		//}
 		//Sleep( 10 );
-		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ), 0);
+		receiveSize = send(m_socket, sendBuffer, sizeof( testbuffer ) * 10, 0);
 		if( -1 == receiveSize )
 		{
 			int sockerror = WSAGetLastError();
@@ -176,7 +176,7 @@ int main()
 			continue;
 		}
 
-		//Sleep(10);
+		Sleep(1);
 	}
 	//================================================================================================================================================================
 }
