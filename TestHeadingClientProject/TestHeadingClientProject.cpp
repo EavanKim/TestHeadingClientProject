@@ -153,17 +153,20 @@ int main()
 	proxySocket.CreateSessionKey();
 	broadCastSocket.CreateSessionKey();
 
+	char staticbuffer[999];
 	std::string buffer;
 	bool ProgramAlive = true;
 	while( ProgramAlive )
 	{
+		ZeroMemory( staticbuffer, 999 );
 		ChatBuffer sendbuffer;
 		// 단순한 구조인 지금 상황에서 매번 데이터를 갱신받으려면 빈 데이터라도 보내야합니다.
 		// 업데이트 요청을 기본으로 발송합니다.
 		memcpy( sendbuffer.buffer, "Request Update", 15 );
-		std::cin >> buffer;
+		std::cin.getline( staticbuffer, 999 );
 
-		uint64_t length = buffer.length();
+		//uint64_t length = buffer.length();
+		uint64_t length = strlen( staticbuffer );
 		if(1 == length)
 		{
 			if( '0' == buffer[ 0 ] )
@@ -179,11 +182,9 @@ int main()
 			ZeroMemory( &sendbuffer.buffer, sendbuffer.length - sizeof( Header ) );
 			// 작으면 글 버퍼 사이즈만큼,
 			// 크다면 오버한만큼 자릅니다.
-			memcpy( sendbuffer.buffer, buffer.c_str(), length > sendbuffer.length ? sendbuffer.length : length );
+			memcpy( sendbuffer.buffer, staticbuffer, length > sendbuffer.length ? sendbuffer.length : length );
 		}
 		proxySocket.C_Send( &sendbuffer );
-
-		broadCastSocket.C_Recv();
 
 		buffer = "";
 	}

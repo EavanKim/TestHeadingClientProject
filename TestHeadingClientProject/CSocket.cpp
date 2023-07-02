@@ -120,7 +120,7 @@ void CSocket::CreateInitializeData()
 	createData.ai_socktype = SOCK_STREAM;
 	createData.ai_protocol = IPPROTO_TCP;
 
-	int result = getaddrinfo( "127.0.0.1", "50000", &createData, &m_info );
+	int result = getaddrinfo( m_ip.c_str(), m_port.c_str(), &createData, &m_info);
 	if( S_OK != result )
 	{
 		// 초기화 실패
