@@ -6,7 +6,6 @@ CSocket::CSocket( std::string _ip, std::string _port )
 {
 	// 상속한 서버형 소켓에서 잘못 초기화 되지 않도록
 	// 값 초기화 외의 아무런 동작도 하면 안됩니다.
-	ZeroMemory( dataBuffer, DEFAULT_SOCKET_BUFFER_LENGTH );
 }
 
 CSocket::CSocket( SOCKET _socket )
@@ -95,7 +94,15 @@ int CSocket::C_Send( Header* _data )
 
 int CSocket::C_Recv()
 {
-	return recv( m_socket, dataBuffer + m_bufferStart, DEFAULT_SOCKET_BUFFER_LENGTH - m_bufferStart, 0 );
+	int result = 0;
+	char* buffer = nullptr;
+	uint64_t length = 0;
+	if( m_buffer.get_buffer( &buffer, &length ) )
+	{
+		result = recv( m_socket, buffer, length, 0 );
+		m_buffer.commit( result );
+	}
+	return result;
 }
 
 bool CSocket::C_Disconnect()
@@ -108,6 +115,22 @@ bool CSocket::C_Disconnect()
 	}
 
 	return true;
+}
+
+void CSocket::PrintAllData()
+{
+	std::vector<Header*> list;
+	m_buffer.get_data( &list );
+	for( Header* data : list )
+	{
+		char* printtarget = Util::GetBuffer( data );
+		if(nullptr != printtarget)
+			printf( printtarget );
+
+		delete data;
+	}
+
+	list.clear();
 }
 
 void CSocket::CreateInitializeData()

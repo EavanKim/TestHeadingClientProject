@@ -12,8 +12,7 @@ public:
 	virtual int C_Recv();
 	virtual bool C_Disconnect();
 
-	char* getBuffer() { return dataBuffer; }
-	void SetStart( uint64_t _length ) { m_bufferStart = _length; }
+	void PrintAllData();
 
 	template<typename ... Args>
 	void PrintWork( const std::string& format, Args ... args )
@@ -38,7 +37,7 @@ protected:
 	std::string m_port = "";
 	addrinfo* m_info = nullptr;
 	SOCKET m_socket = INVALID_SOCKET;
-	char dataBuffer[ DEFAULT_SOCKET_BUFFER_LENGTH ];
+	CNet_Buffer m_buffer;
 	PrintLog* m_printOut = nullptr;
 };
 

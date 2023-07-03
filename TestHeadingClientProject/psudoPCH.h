@@ -29,6 +29,8 @@
 
 #include "PrintLog.h"
 
+#include "CNet_Buffer.h"
+
 #include "CMessage_BroadCast.h"
 
 class CSession;
