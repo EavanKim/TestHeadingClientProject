@@ -12,6 +12,9 @@ public:
 	virtual int C_Recv();
 	virtual bool C_Disconnect();
 
+	char* getBuffer() { return dataBuffer; }
+	void SetStart( uint64_t _length ) { m_bufferStart = _length; }
+
 	template<typename ... Args>
 	void PrintWork( const std::string& format, Args ... args )
 	{
@@ -29,6 +32,7 @@ protected:
 	virtual void CreateInitializeData();
 	
 	uint64_t m_sessionKey = 0;
+	uint64_t m_bufferStart = 0;
 	ENUM_SESSION_TYPE m_sessionType = ENUM_SESSION_SYNC;
 	std::string m_ip = "";
 	std::string m_port = "";

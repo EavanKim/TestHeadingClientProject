@@ -47,6 +47,67 @@ int TryConnect(SOCKET& _sock, addrinfo* _info)
 	while( S_OK != result );
 }
 
+
+uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize )
+{
+	uint64_t processSize = 0;
+	uint64_t lastLength = 0;
+
+	while( 0 != _totalrecvSize )
+	{
+		if( _totalrecvSize < sizeof( Header ) )
+			return processSize;
+
+		char* currPtr = _buffer + lastLength;
+		Header getHeader = {};
+		uint64_t type = 0;
+		uint64_t packlength = 0;
+		Util::ParseHeader( currPtr, getHeader );
+
+		switch( getHeader.type )
+		{
+			case 2:
+
+				break;
+			case 3:
+
+				break;
+			case 100:
+			{
+				if( _totalrecvSize < sizeof( TestBuffer ) )
+					return processSize;
+				TestBuffer parseData = {};
+
+				Util::ParseData( currPtr, parseData );
+				packlength = sizeof( TestBuffer );
+				//printf( parseData.buffer );
+				//printf( "\n" );
+			}
+			break;
+			case 1000:
+			{
+				if( _totalrecvSize < sizeof( ChatBuffer ) )
+					return processSize;
+				ChatBuffer parseData = {};
+				memcpy( &parseData, _buffer + processSize, sizeof( ChatBuffer ) );
+				printf( parseData.buffer );
+				printf( "\n" );
+				packlength = sizeof( TestBuffer );
+			}
+			default:
+				printf( "!!! Packet Parsing Failure !!! \n" );
+				return processSize;
+		}
+
+		processSize += getHeader.length;
+		lastLength += getHeader.length;
+		_totalrecvSize -= getHeader.length;
+		//printf("%lld \n", _totalrecvSize);
+	}
+
+	return processSize;
+}
+
 void DoRawCode()
 {
 	//uint64_t m_packetMulti = 1;
@@ -169,9 +230,11 @@ int main()
 		uint64_t length = strlen( staticbuffer );
 		if(1 == length)
 		{
-			if( '0' == buffer[ 0 ] )
+			if( '0' == staticbuffer[ 0 ] )
 			{
 				// 여기서 바로 cleanup시키고 리턴해도 되지만 그냥 빠져나가기 처리로 합니다.
+				proxySocket.C_Disconnect();
+				broadCastSocket.C_Disconnect();
 				ProgramAlive = false;
 				continue;
 			}
@@ -185,6 +248,21 @@ int main()
 			memcpy( sendbuffer.buffer, staticbuffer, length > sendbuffer.length ? sendbuffer.length : length );
 		}
 		proxySocket.C_Send( &sendbuffer );
+		int result = broadCastSocket.C_Recv();
+		if( 0 < result )
+		{
+			uint64_t leftLength = result;
+			ReadData( broadCastSocket.getBuffer(), leftLength );
+			broadCastSocket.SetStart( leftLength );
+			printf("%i \n", result );
+		}
+		else if( -1 == result )
+		{
+			proxySocket.C_Disconnect();
+			broadCastSocket.C_Disconnect();
+
+			break;
+		}
 
 		buffer = "";
 	}

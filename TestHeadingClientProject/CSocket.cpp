@@ -95,7 +95,7 @@ int CSocket::C_Send( Header* _data )
 
 int CSocket::C_Recv()
 {
-	return recv( m_socket, dataBuffer, DEFAULT_SOCKET_BUFFER_LENGTH, 0 );
+	return recv( m_socket, dataBuffer + m_bufferStart, DEFAULT_SOCKET_BUFFER_LENGTH - m_bufferStart, 0 );
 }
 
 bool CSocket::C_Disconnect()
