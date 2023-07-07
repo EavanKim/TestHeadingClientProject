@@ -1,8 +1,9 @@
 ﻿#include "psudoPCH.h"
+#include <conio.h>
 
 int main()
 {
-	WSAData Data;
+	WSAData Data = {};
 	Heading::start( Data );
 
 	//===================================================================================================================================================================
@@ -15,19 +16,54 @@ int main()
 		Heading::connectionInfo mainConn;
 		Heading::connectionInfo broadCastConn;
 
-		ZeroMemory( &mainConn, sizeof( Heading::connectionInfo ) );
-		ZeroMemory( &broadCastConn, sizeof( Heading::connectionInfo ) );
+		mainConn.ip = std::string( "127.0.0.1" );
+		broadCastConn.ip = std::string( "127.0.0.1" );
 
-		Heading::createInfo( mainConn );
-		Heading::createInfo( broadCastConn );
+		mainConn.port = std::string( "50000" );
+		broadCastConn.port = std::string( "51000" );
+
+		if( !Heading::createInfo( mainConn ) )
+		{
+			return 1;
+		}
+
+		if( !Heading::createInfo( broadCastConn ) )
+		{
+			return 1;
+		}
 
 		Heading::connect( mainConn );
 		Heading::connect( broadCastConn );
 
 		while( IsClientLive )
 		{
+			if( _kbhit() )
+			{
+				std::streamsize size = {};
+				char* string = nullptr;
+				std::cin.getline( string, size );
 
+				Heading::ChatBuffer* chatBuffer = new Heading::ChatBuffer();
+				memcpy_s( chatBuffer->buffer, DEFAULT_SOCKET_BUFFER_LENGTH, string, size );
+				mainConn.sendBuff.push_back( chatBuffer );
+
+				Heading::send( mainConn );
+			}
+
+			Heading::recv( broadCastConn );
+
+			for( Heading::Header* header : broadCastConn.sendBuff )
+			{
+				Heading::SendStruct<0, 1>* parseMessage = ( Heading::SendStruct<0, 1>* )header;
+				printf("Message : %s", parseMessage->buffer);
+				delete header;
+			}
+
+			broadCastConn.sendBuff.clear();
 		}
+
+		Heading::disconnect( mainConn );
+		Heading::disconnect( broadCastConn );
 
 		//================================================================================================================================================================
 	}
