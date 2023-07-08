@@ -37,19 +37,17 @@ int main()
 
 		while( IsClientLive )
 		{
-			if( _kbhit() )
-			{
-				std::streamsize size = {};
-				char* string = nullptr;
-				std::cin.getline( string, size );
+			char buffer[ DEFAULT_SOCKET_BUFFER_LENGTH ];
+			//std::streamsize size = {};
+			//char* string = nullptr;
+			//std::cin.getline( string, size );
+			scanf_s(buffer);
 
-				Heading::ChatBuffer* chatBuffer = new Heading::ChatBuffer();
-				memcpy_s( chatBuffer->buffer, DEFAULT_SOCKET_BUFFER_LENGTH, string, size );
-				mainConn.sendBuff.push_back( chatBuffer );
+			Heading::ChatBuffer* chatBuffer = new Heading::ChatBuffer( );
+			memcpy_s( chatBuffer->buffer, 1000, buffer, 1000 );
+			mainConn.sendBuff.push_back( chatBuffer );
 
-				Heading::send( mainConn );
-			}
-
+			Heading::send( mainConn );
 			Heading::recv( broadCastConn );
 
 			for( Heading::Header* header : broadCastConn.sendBuff )
