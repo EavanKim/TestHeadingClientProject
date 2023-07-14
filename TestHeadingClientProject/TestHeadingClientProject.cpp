@@ -6,41 +6,24 @@ int main()
 	WSAData Data = {};
 	Heading::start( Data );
 
-	//===================================================================================================================================================================
-
 	try
 	{
 		bool IsClientLive = true;
-		//================================================================================================================================================================
 
 		Heading::connectionInfo mainConn;
-		Heading::connectionInfo broadCastConn;
-
 		mainConn.ip = std::string( "127.0.0.1" );
-		broadCastConn.ip = std::string( "127.0.0.1" );
-
 		mainConn.port = std::string( "50000" );
-		broadCastConn.port = std::string( "51000" );
 
 		if( !Heading::createInfo( mainConn ) )
 		{
 			return 1;
 		}
 
-		if( !Heading::createInfo( broadCastConn ) )
-		{
-			return 1;
-		}
-
 		Heading::connect( mainConn );
-		Heading::connect( broadCastConn );
 
 		while( IsClientLive )
 		{
 			char buffer[ DEFAULT_SOCKET_BUFFER_LENGTH ];
-			//std::streamsize size = {};
-			//char* string = nullptr;
-			//std::cin.getline( string, size );
 			scanf_s(buffer);
 
 			Heading::ChatBuffer* chatBuffer = new Heading::ChatBuffer( );
@@ -48,22 +31,9 @@ int main()
 			mainConn.sendBuff.push_back( chatBuffer );
 
 			Heading::send( mainConn );
-			Heading::recv( broadCastConn );
-
-			for( Heading::Header* header : broadCastConn.sendBuff )
-			{
-				Heading::SendStruct<0, 1>* parseMessage = ( Heading::SendStruct<0, 1>* )header;
-				printf("Message : %s", parseMessage->buffer);
-				delete header;
-			}
-
-			broadCastConn.sendBuff.clear();
 		}
 
 		Heading::disconnect( mainConn );
-		Heading::disconnect( broadCastConn );
-
-		//================================================================================================================================================================
 	}
 	catch( ... )
 	{
@@ -81,8 +51,6 @@ int main()
 		wprintf( L" LastError String : %s", message );
 		LocalFree( message );
 	}
-
-	//===================================================================================================================================================================
 
 	Heading::end();
 }
