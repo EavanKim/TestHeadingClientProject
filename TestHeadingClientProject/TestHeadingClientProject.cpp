@@ -10,30 +10,24 @@ int main()
 	{
 		bool IsClientLive = true;
 
-		Heading::connectionInfo mainConn;
+		ChatConnectionInfo mainConn;
 		mainConn.ip = std::string( "127.0.0.1" );
 		mainConn.port = std::string( "50000" );
+		mainConn.nickName = "testUser0\0";
 
-		if( !Heading::createInfo( mainConn ) )
-		{
-			return 1;
-		}
-
-		Heading::connect( mainConn );
+		Heading::CConnector conn;
+		conn.newConnect( mainConn );
+		CChatClientSession session( mainConn );
 
 		while( IsClientLive )
 		{
-			char buffer[ DEFAULT_SOCKET_BUFFER_LENGTH ];
+			char buffer[ 100 ];
 			scanf_s(buffer);
 
-			Heading::ChatBuffer* chatBuffer = new Heading::ChatBuffer( );
-			memcpy_s( chatBuffer->buffer, 1000, buffer, 1000 );
-			mainConn.sendBuff.push_back( chatBuffer );
-
-			Heading::send( mainConn );
+			session.Update();
 		}
 
-		Heading::disconnect( mainConn );
+		session.Release();
 	}
 	catch( ... )
 	{
