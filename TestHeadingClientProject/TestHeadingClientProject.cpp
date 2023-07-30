@@ -1,6 +1,13 @@
 ﻿#include "psudoPCH.h"
 #include <conio.h>
 
+#if _WIN32
+	#ifdef _DEBUG
+		#include "crtdbg.h"
+		#define new new( _CLIENT_BLOCK, __FILE__, __LINE__)
+	#endif // _DEBUG
+#endif
+
 int main()
 {
 	WSAData Data = {};
@@ -21,8 +28,18 @@ int main()
 
 		while( IsClientLive )
 		{
-			char buffer[ 100 ];
-			scanf_s(buffer);
+			std::string buffer;
+			std::getline( std::cin, buffer );
+
+			if( 0 != buffer.length( ) )
+			{
+				Heading::PCK_CS_Chatting* chatt = new Heading::PCK_CS_Chatting();
+
+				memcpy_s(chatt->buffer, 100, buffer.c_str(), 99);
+				chatt->buffer[99] = '\0';
+
+				session.enqueueSend(chatt);
+			}
 
 			session.Update();
 		}
@@ -47,4 +64,9 @@ int main()
 	}
 
 	Heading::end();
+#if _WIN32
+	#ifdef _DEBUG
+		_CrtDumpMemoryLeaks();
+	#endif
+#endif
 }
