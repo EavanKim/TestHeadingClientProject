@@ -8,6 +8,23 @@
 	#endif // _DEBUG
 #endif
 
+bool processChatting(IN OUT std::string& buffer)
+{
+	if (_kbhit() == 0)
+		return false;
+
+	// typing
+	int input = _getch();
+	if (input != 0x0D)
+	{
+		buffer.append(1, (char)input);
+		return false;
+	}
+
+	// enter
+	return true;
+}
+
 int main()
 {
 	WSAData Data = {};
@@ -25,23 +42,30 @@ int main()
 		Heading::CConnector conn;
 		conn.newConnect( mainConn );
 		CChatClientSession session( mainConn );
+		session.CreateAndSetEvent(FD_READ);
+
+		std::string chattingBuffer;
+		chattingBuffer.reserve(1 << 10);
 
 		while( IsClientLive )
 		{
-			std::string buffer;
-			std::getline( std::cin, buffer );
-
-			if( 0 != buffer.length( ) )
+			// non-blocking chatting
+			if (processChatting(IN OUT chattingBuffer) == true)
 			{
-				Heading::PCK_CS_Chatting* chatt = new Heading::PCK_CS_Chatting();
+				Heading::PCK_CS_Chatting* pck = new Heading::PCK_CS_Chatting();
+				{
+					size_t bufferSize = sizeof(pck->buffer);
+					memcpy_s(pck->buffer, bufferSize, chattingBuffer.c_str(), bufferSize - 1);
+					pck->buffer[bufferSize - 1] = '\0';
+				}
 
-				memcpy_s(chatt->buffer, 100, buffer.c_str(), 99);
-				chatt->buffer[99] = '\0';
-
-				session.enqueueSend(chatt);
+				session.enqueueSend(pck);
+				chattingBuffer.clear();
 			}
 
 			session.Update();
+
+			Sleep(1);
 		}
 
 		session.Release();

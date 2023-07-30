@@ -31,6 +31,10 @@ CChatClientSession::~CChatClientSession( )
 
 void CChatClientSession::Update( )
 {
-	//RecvData();
+	Heading::packetBuff buff;
+	RecvData(OUT buff);
+	recvCount_ += buff.size();
+	printf(">>>>>>>>>>>>>>>>>>>>>>>>>>> RECV_COUNT: %zu \n", recvCount_);
+
 	SendData();
 }

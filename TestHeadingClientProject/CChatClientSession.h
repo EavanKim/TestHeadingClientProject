@@ -17,5 +17,7 @@ public:
 
 private:
 	void ( *onPing )() = nullptr;
+
+	size_t recvCount_ = 0;
 };
 
