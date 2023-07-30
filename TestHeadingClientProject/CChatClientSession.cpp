@@ -13,7 +13,7 @@ CChatClientSession::CChatClientSession( ChatConnectionInfo& _info )
 
 	memcpy_s(enter->buffer, 12, _info.nickName.c_str(), 12 );
 
-	m_sendBuff.push_back(enter);
+	m_sendBuff.push(enter);
 
 	SendData();
 }
@@ -34,6 +34,13 @@ void CChatClientSession::Update( )
 	Heading::packetBuff buff;
 	RecvData(OUT buff);
 	recvCount_ += buff.size();
+	while( !buff.empty( ) )
+	{
+		Heading::Header* header = buff.front();
+		delete header;
+		buff.pop();
+	}
+
 	printf(">>>>>>>>>>>>>>>>>>>>>>>>>>> RECV_COUNT: %zu \n", recvCount_);
 
 	SendData();
