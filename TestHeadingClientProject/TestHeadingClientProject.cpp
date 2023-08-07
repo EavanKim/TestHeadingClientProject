@@ -72,7 +72,7 @@ int main()
 	}
 	catch( ... )
 	{
-		// 크래시하면 죽어버리고, 바로 죽는게 억지로 살리는 것 보단 낫겠지만... 적어도 뭔 일이 벌어졌는지는 볼 수 있도록 합니다.
+		// ũ�����ϸ� �׾������, �ٷ� �״°� ������ �츮�� �� ���� ��������... ��� �� ���� ������������ �� �� �ֵ��� �մϴ�.
 
 		TCHAR* message = nullptr;
 		FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
