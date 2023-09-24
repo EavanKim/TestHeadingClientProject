@@ -28,7 +28,8 @@ bool processChatting(IN OUT std::string& buffer)
 int main()
 {
 	WSAData Data = {};
-	Heading::start( Data );
+	std::string str;
+	Heading::WSAErrorString( WSAStartup( MAKEWORD( 2, 2 ), &Data ), str );
 
 	try
 	{
@@ -87,7 +88,7 @@ int main()
 		LocalFree( message );
 	}
 
-	Heading::end();
+	WSACleanup();
 #if _WIN32
 	#ifdef _DEBUG
 		_CrtDumpMemoryLeaks();
